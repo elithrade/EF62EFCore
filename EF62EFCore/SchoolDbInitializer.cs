@@ -63,6 +63,7 @@ namespace EF62EFCore
                 new Enrollment{StudentID=5,CourseID=4041,Grade=Grade.C},
                 new Enrollment{StudentID=6,CourseID=1045},
                 new Enrollment{StudentID=7,CourseID=3141,Grade=Grade.A},
+                new Enrollment{StudentID=8,CourseID=3141,Grade=Grade.A},
             };
             enrollments.ForEach(s => context.Enrollments.Add(s));
             context.SaveChanges();
