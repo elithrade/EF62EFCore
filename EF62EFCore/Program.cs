@@ -12,6 +12,11 @@ namespace EF62EFCore
             var connectionString = ConfigurationManager.ConnectionStrings["SchoolContext"].ConnectionString;
             using (var ctx = new SchoolDbContext(connectionString))
             {
+                ctx.Database.EnsureDeleted();
+                ctx.Database.EnsureCreated();
+
+                new SchoolDbInitializer().Seed(ctx);
+
                 var students = ctx.Students.ToList();
                 foreach (var student in students)
                 {

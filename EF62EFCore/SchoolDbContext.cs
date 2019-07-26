@@ -1,25 +1,32 @@
-﻿using System.Data.Entity;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace EF62EFCore
 {
     public class SchoolDbContext : DbContext
     {
+        private readonly string _connectionString;
+
         public SchoolDbContext() : base()
         {
         }
 
-        public SchoolDbContext(string connectionString) : base(connectionString)
+        public SchoolDbContext(string connectionString)
         {
-            // Database initialization strategies.
-            Database.SetInitializer(new SchoolDbInitializer());
+            _connectionString = connectionString;
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer(_connectionString);
         }
 
         public DbSet<Student> Students { get; set; }
         public DbSet<StudentInfo> Infos { get; set; }
         public DbSet<Enrollment> Enrollments { get; set; }
         public DbSet<Course> Courses { get; set; }
+        public DbSet<TeacherStudent> TeacherStudents { get; set; }
 
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // HasRequired, HasOptional, or HasMany method to specify the type of relationship this entity participates in.
             // WithRequired, WithOptional, and WithMany method to specify the inverse relationship.
@@ -28,32 +35,51 @@ namespace EF62EFCore
             // this meaning that the Student entity object must include the StudentInfo
             // entity object and the StudentInfo entity must include the Student entity. 
             modelBuilder.Entity<Student>()
-                .HasRequired(student => student.Info) // EF Core HasOne(s => s.Info)
-                .WithRequiredPrincipal(info => info.Student); // EF Core WithOne(i => i.Student)
+                .HasOne(student => student.Info) // EF Core HasOne(s => s.Info)
+                .WithOne(info => info.Student) // EF Core WithOne(i => i.Student)
+                .HasForeignKey<StudentInfo>(info => info.ID);
 
             // Configure one to many relationship between Course and Enrollment
             modelBuilder.Entity<Enrollment>()
-                .HasRequired(enrollment => enrollment.Course) // Enrollment entity has required the Course property
+                .HasOne(enrollment => enrollment.Course) // Enrollment entity has required the Course property
                 .WithMany(course => course.Enrollments) // Configure the other end that Course entity includes many Enrollment entities
                 .HasForeignKey(enrollment => enrollment.CourseID); // Specify the foreign key
 
             // Similarly one to many relationship between Student and Enrollment, but configure Student instead of Enrollment
             modelBuilder.Entity<Student>()
                 .HasMany(student => student.Enrollments)
-                .WithRequired(enrollment => enrollment.Student)
+                .WithOne(enrollment => enrollment.Student)
                 .HasForeignKey(enrollment => enrollment.StudentID);
 
-            // Many to many relationship between Student and Teacher
-            // Configure both the foreign keys in the joining entity as a composite key using Fluent API.
-            modelBuilder.Entity<Student>()
-                .HasMany(s => s.Teachers)
-                .WithMany(t => t.Students)
-                .Map(cs =>
-                {
-                    cs.MapLeftKey("StudentID");
-                    cs.MapRightKey("TeacherID");
-                    cs.ToTable("StudentTeacher");
-                });
+            // Many-to-many relationships without an entity class to represent the
+            // join table are not yet supported. However, you can represent a many-to-many
+            // relationship by including an entity class for the join table and mapping
+            // two separate one-to-many relationships.
+            modelBuilder.Entity<TeacherStudent>()
+                .HasKey(ts => new { ts.TeacherId, ts.StudentId });
+
+            modelBuilder.Entity<TeacherStudent>()
+                .HasOne(ts => ts.Student)
+                .WithMany(student => student.TeacherStudents)
+                .HasForeignKey(ts => ts.StudentId);
+
+            modelBuilder.Entity<TeacherStudent>()
+                .HasOne(ts => ts.Teacher)
+                .WithMany(teacher => teacher.TeacherStudents)
+                .HasForeignKey(ts => ts.TeacherId);
         }
+    }
+
+    // EF Core
+    // To create a Many-to-Many relationship using Fluent API you have to create a Joining Entity.
+    // This joining entity will contain the foreign keys (reference navigation property) for both the other entities.
+    // These foreign keys will form the composite primary key for this joining entity.
+    public class TeacherStudent
+    {
+        public int StudentId { get; set; } // Foreign key property
+        public Student Student { get; set; } // Reference navigation property
+
+        public int TeacherId { get; set; } // Foreign key property
+        public Teacher Teacher { get; set; } // Reference navigation property
     }
 }

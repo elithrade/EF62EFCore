@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 
 namespace EF62EFCore
 {
-    public class SchoolDbInitializer : DropCreateDatabaseAlways<SchoolDbContext>
+    public class SchoolDbInitializer
     {
-        protected override void Seed(SchoolDbContext context)
+        public void Seed(SchoolDbContext context)
         {
             var students = new List<Student>
             {
@@ -24,7 +23,7 @@ namespace EF62EFCore
 
             var studentAddresses = new List<StudentInfo>
             {
-                new StudentInfo{ID = 1,  DateOfBirth = new DateTime(1989, 10, 1)},
+                new StudentInfo{ID = 1, DateOfBirth = new DateTime(1989, 10, 1)},
                 new StudentInfo{ID = 2, DateOfBirth = new DateTime(1990, 11, 1)},
                 new StudentInfo{ID = 3, DateOfBirth = new DateTime(1987, 8, 7)},
                 new StudentInfo{ID = 4, DateOfBirth = new DateTime(1985, 8, 17)},

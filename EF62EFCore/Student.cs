@@ -14,6 +14,6 @@ namespace EF62EFCore
         public virtual StudentInfo Info { get; set; }
 
         // Collection navigation property
-        public ICollection<Teacher> Teachers { get; set; }
+        public ICollection<TeacherStudent> TeacherStudents { get; set; }
     }
 }
